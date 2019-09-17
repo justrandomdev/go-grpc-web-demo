@@ -8,8 +8,9 @@
                     <mat-list *ngFor="let item of items; let i = index;">
                         <mat-list-item>
                             <mat-form-field>
-                                <input *ngIf="item.description !== ''" matInput type="text" [(ngModel)]="item.description" [(value)]="item.description" (blur)="onSubmit($event)" (ngModelChange)="markDirty(i)">
-                                <input *ngIf="item.description === ''" matInput type="text" [(ngModel)]="item.description" [placeholder]="item.id == 0? 'What do you need to do?' : ''" [(value)]="item.description" (blur)="onSubmit($event)" (ngModelChange)="markDirty(i)">
+                                <input matInput type="text" 
+                                        [(ngModel)]="item.description" [placeholder]="item.id == 0? 'What do you need to do?' : ''" 
+                                        (blur)="onSubmit($event)" (ngModelChange)="onChange($event, i)">
                             </mat-form-field>
                         </mat-list-item>
                     </mat-list>

@@ -32,13 +32,14 @@ export class ShellComponent implements OnInit {
       item.isComplete = val.getIscomplete();
       this.items.push(item);
     });
+
   }
 
   addNewItem() {
     this.items.push(new Task());
   }
 
-  markDirty(i: number) {
+  onChange(value: string, i: number) {
     this.items[i].isDirty = true;
   }
 
