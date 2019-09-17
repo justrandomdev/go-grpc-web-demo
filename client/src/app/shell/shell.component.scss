@@ -1,0 +1,60 @@
+@import 'src/theme';
+
+
+$underline-color: mat-color($mat-gray, 200);
+$title-text: mat-color($mat-gray, 700);
+$title-text-shadow: mat-color($mat-blue-gray, 200);
+
+.shell-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.list-container {
+    flex-grow:1;
+
+    mat-card-header {
+        border-bottom: 1px solid $underline-color; 
+        background-color: mat-color($mat-gray, 50);
+
+        mat-card-title {
+            padding-top:0.5em;
+            color: $title-text;
+            text-shadow: 2px 2px 3px $title-text-shadow;
+        }
+    }
+}
+
+.list-card {
+    padding:0px;
+    max-width:99%;
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:1em;
+}
+
+.toolbar-container {
+    display:flex;
+    flex-direction: row;
+}
+
+.spacer {
+    /* This fills the remaining space, by using flexbox. 
+       Every toolbar row uses a flexbox row layout. */
+    flex: 1 1 auto;
+}
+
+.btn-add {
+    font-size: 0.8em;
+}
+
+mat-list-item {
+    margin-top: 10px;
+}
+
+mat-form-field {
+    margin-top:1em;
+    margin-bottom: 1em;
+}
+

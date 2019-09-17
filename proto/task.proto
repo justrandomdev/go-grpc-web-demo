@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+//Generate golang: protoc --go_out=plugins=grpc:. task.proto
+//Generate javascript messages:  protoc --plugin="protoc-gen-ts=../client/node_modules/ts-protoc-gen/bin/protoc-gen-ts" --js_out="import_style=commonjs,binary:../client/src/app/grpc" --ts_out="../client/src/app/grpc" task.proto
+//Generate javascript client: protoc -I=. task.proto --js_out=import_style=commonjs:. --grpc-web_out=import_style=typescript,mode=grpcwebtext:.
+package taskservice;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service TaskService {
+    rpc GetAllTasks(google.protobuf.Empty) returns (stream Task) {};
+    rpc GetTasksSince(GetTasksSinceRequest) returns (GetTaskResponse) {};
+    rpc UpdateTasks(UpdateTaskRequest) returns (google.protobuf.Empty) {};
+}
+
+message Task {
+    int32 id = 1;
+    string description = 2;
+    bool isComplete = 3;
+    google.protobuf.Timestamp created = 4;
+    google.protobuf.Timestamp deleted = 5;
+}
+
+message UpdateTaskRequest {
+    repeated Task tasks = 1;
+}
+
+message GetTaskResponse {
+    repeated Task tasks = 1;
+}
+
+message GetTasksSinceRequest {
+    google.protobuf.Timestamp lastUpdated = 1;    
+}
