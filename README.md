@@ -6,4 +6,13 @@ This POC is based on [gRPC-Web](https://github.com/grpc/grpc-web)
 
 ## Getting Started
 
-Its not rocket science. You're going to have to figure it out ;)
+### Server
+* The server is in the the server folder
+* Install golang dependecies
+* Fire up the golang server in the server folder using your favourite method.
+
+### Client
+* Make sure you have a sane recent node environment
+* Open the client doler on the command line & type `npm install`, followed by `npm start`
+
+Don't worry about the envoy folder. It's an example envoy config that could be adapted for a prod environment
