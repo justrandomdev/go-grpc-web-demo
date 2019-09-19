@@ -41,7 +41,28 @@ export namespace Task {
   }
 }
 
+export class GetAllTasksRequest extends jspb.Message {
+  getSessiontoken(): string;
+  setSessiontoken(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetAllTasksRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetAllTasksRequest): GetAllTasksRequest.AsObject;
+  static serializeBinaryToWriter(message: GetAllTasksRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetAllTasksRequest;
+  static deserializeBinaryFromReader(message: GetAllTasksRequest, reader: jspb.BinaryReader): GetAllTasksRequest;
+}
+
+export namespace GetAllTasksRequest {
+  export type AsObject = {
+    sessiontoken: string,
+  }
+}
+
 export class UpdateTaskRequest extends jspb.Message {
+  getSessiontoken(): string;
+  setSessiontoken(value: string): void;
+
   getTasksList(): Array<Task>;
   setTasksList(value: Array<Task>): void;
   clearTasksList(): void;
@@ -57,6 +78,7 @@ export class UpdateTaskRequest extends jspb.Message {
 
 export namespace UpdateTaskRequest {
   export type AsObject = {
+    sessiontoken: string,
     tasksList: Array<Task.AsObject>,
   }
 }

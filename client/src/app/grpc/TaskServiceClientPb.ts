@@ -13,8 +13,7 @@ import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/t
 import * as google_protobuf_empty_pb from 'google-protobuf/google/protobuf/empty_pb';
 
 import {
-  GetTaskResponse,
-  GetTasksSinceRequest,
+  GetAllTasksRequest,
   Task,
   UpdateTaskRequest} from './task_pb';
 
@@ -39,14 +38,14 @@ export class TaskServiceClient {
 
   methodInfoGetAllTasks = new grpcWeb.AbstractClientBase.MethodInfo(
     Task,
-    (request: google_protobuf_empty_pb.Empty) => {
+    (request: GetAllTasksRequest) => {
       return request.serializeBinary();
     },
     Task.deserializeBinary
   );
 
   getAllTasks(
-    request: google_protobuf_empty_pb.Empty,
+    request: GetAllTasksRequest,
     metadata?: grpcWeb.Metadata) {
     return this.client_.serverStreaming(
       this.hostname_ +
@@ -54,28 +53,6 @@ export class TaskServiceClient {
       request,
       metadata || {},
       this.methodInfoGetAllTasks);
-  }
-
-  methodInfoGetTasksSince = new grpcWeb.AbstractClientBase.MethodInfo(
-    GetTaskResponse,
-    (request: GetTasksSinceRequest) => {
-      return request.serializeBinary();
-    },
-    GetTaskResponse.deserializeBinary
-  );
-
-  getTasksSince(
-    request: GetTasksSinceRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.Error,
-               response: GetTaskResponse) => void) {
-    return this.client_.rpcCall(
-      this.hostname_ +
-        '/taskservice.TaskService/GetTasksSince',
-      request,
-      metadata || {},
-      this.methodInfoGetTasksSince,
-      callback);
   }
 
   methodInfoUpdateTasks = new grpcWeb.AbstractClientBase.MethodInfo(

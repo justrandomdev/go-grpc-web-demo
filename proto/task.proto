@@ -9,8 +9,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 service TaskService {
-    rpc GetAllTasks(google.protobuf.Empty) returns (stream Task) {};
-    rpc GetTasksSince(GetTasksSinceRequest) returns (GetTaskResponse) {};
+    rpc GetAllTasks(GetAllTasksRequest) returns (stream Task) {};
     rpc UpdateTasks(UpdateTaskRequest) returns (google.protobuf.Empty) {};
 }
 
@@ -22,8 +21,13 @@ message Task {
     google.protobuf.Timestamp deleted = 5;
 }
 
+message GetAllTasksRequest {
+    string SessionToken = 1;
+}
+
 message UpdateTaskRequest {
-    repeated Task tasks = 1;
+    string SessionToken = 1;
+    repeated Task tasks = 2;
 }
 
 message GetTaskResponse {

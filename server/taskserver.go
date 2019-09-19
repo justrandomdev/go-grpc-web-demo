@@ -5,6 +5,8 @@ import (
 	"context"
 	"flag"
 	empty "github.com/golang/protobuf/ptypes/empty"
+	//"github.com/gorilla/websocket"
+	"./common"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -29,12 +31,12 @@ var tasks = []*task{}
 
 func main() {
 
-	addrGrpc := flag.String("g", "", "GRPC Server bind address e.g. 0.0.0.0:8080 (Required)")
-	addrHttp := flag.String("h", "", "HTTP Server bind address e.g. 0.0.0.0:8080 (Required)")
+	addrGrpc := flag.String("g", "", "GRPC Server bind address e.g. 0.0.0.0:8060 (Required)")
+	addrHTTP := flag.String("h", "", "HTTP Server bind address e.g. 0.0.0.0:8080 (Required)")
 
 	flag.Parse()
 
-	if *addrGrpc == "" || *addrHttp == "" {
+	if *addrGrpc == "" || *addrHTTP == "" {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -51,7 +53,7 @@ func main() {
 	grpcWebServer := grpcweb.WrapServer(srv)
 
 	httpServer := &http.Server{
-		Addr: *addrHttp,
+		Addr: *addrHTTP,
 		Handler: h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.ProtoMajor == 2 {
 				grpcWebServer.ServeHTTP(w, r)
@@ -71,55 +73,71 @@ func main() {
 	http2.ConfigureServer(httpServer, nil)
 
 	// Register the implementation for hello server.
-	taskservice.RegisterTaskServiceServer(srv, &grpcService{})
+	taskservice.RegisterTaskServiceServer(srv, getGrpcService())
 
 	log.Printf("GRPC server listening on  %s", *addrGrpc)
-	log.Printf("HTTP server listening on  %s", *addrHttp)
+	log.Printf("HTTP server listening on  %s", *addrHTTP)
 	log.Fatal(httpServer.ListenAndServe())
 
 }
 
 func initTasks() {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		n := i + 1
 		tasks = append(tasks, &task{ID: int32(n), Description: "Initial Task " + strconv.Itoa(n), IsComplete: false})
 	}
 }
 
-/////////////////////////////////////////////////////////////
-// The following lines contain the implementation for
-// the gRPC service "MailService"
-/////////////////////////////////////////////////////////////
 type grpcService struct {
+	clients *common.StreamMap
 }
 
 func getGrpcService() *grpcService {
-	return &grpcService{}
+	return &grpcService{clients: common.NewStreamMap()}
 }
 
-func (s grpcService) GetAllTasks(e *empty.Empty, stream taskservice.TaskService_GetAllTasksServer) error {
+func (s grpcService) GetAllTasks(req *taskservice.GetAllTasksRequest, stream taskservice.TaskService_GetAllTasksServer) error {
+	cont := true
 
-	log.Printf("GetAllTasks Executed")
+	for cont {
+		if conn, ok := s.clients.Get(req.SessionToken); !ok {
+			s.clients.Add(req.SessionToken, stream)
 
-	for i := range tasks {
-		stream.Send(&taskservice.Task{
-			Id:          tasks[i].ID,
-			Description: tasks[i].Description,
-			IsComplete:  tasks[i].IsComplete,
-		})
+			log.Printf("%s connected", req.SessionToken)
 
-		//Delay used to highlight streaming
-		time.Sleep(5 * time.Millisecond)
+			for i := range tasks {
+				stream.Send(&taskservice.Task{
+					Id:          tasks[i].ID,
+					Description: tasks[i].Description,
+					IsComplete:  tasks[i].IsComplete,
+				})
+			}
+
+		} else {
+			if !conn.IsConnected() {
+				// Has disconnected
+				s.clients.Delete(req.SessionToken)
+				log.Printf("Client deleted")
+				cont = false
+			}
+		}
+
+		time.Sleep(20 * time.Millisecond)
 	}
 
+	log.Printf("Exiting!")
 	return nil
 }
 
-func (s grpcService) GetTasksSince(ctx context.Context, req *taskservice.GetTasksSinceRequest) (*taskservice.GetTaskResponse, error) {
-	response := &taskservice.GetTaskResponse{}
-	response.Tasks = make([]*taskservice.Task, len(tasks))
+func (s grpcService) markDisconnected(key string) {
+	log.Printf("%s disconnected", key)
 
-	return response, nil
+	if conn, ok := s.clients.Get(key); ok {
+		log.Printf("SetConnected=false")
+		conn.SetConnected(false)
+	}
+
+	log.Printf("%d clients connected", s.clients.ConnectedCount())
 }
 
 func (s grpcService) UpdateTasks(ctx context.Context, in *taskservice.UpdateTaskRequest) (*empty.Empty, error) {
@@ -129,14 +147,34 @@ func (s grpcService) UpdateTasks(ctx context.Context, in *taskservice.UpdateTask
 		if req.Id == 0 {
 			//Add item
 			next := len(tasks) + 1
-			tasks = append(tasks, &task{ID: int32(next), Description: req.Description, IsComplete: req.IsComplete})
+			newTask := &task{ID: int32(next), Description: req.Description, IsComplete: req.IsComplete}
+			tasks = append(tasks, newTask)
+
+			s.clients.Range(func(k string, v *common.ClientConnection) {
+				req.Id = int32(next)
+				err := v.Conn().Send(req)
+
+				if err != nil && i == 0 {
+					s.markDisconnected(k)
+				}
+			})
+
 		} else {
 			//Update existing item
 			for j := range tasks {
 				if tasks[j].ID == req.Id {
 					tasks[j].Description = req.Description
 					tasks[j].IsComplete = req.IsComplete
-					break
+
+					s.clients.Range(func(k string, v *common.ClientConnection) {
+						if k != in.SessionToken {
+							err := v.Conn().Send(req)
+
+							if err != nil {
+								s.markDisconnected(k)
+							}
+						}
+					})
 				}
 			}
 		}

@@ -1,2 +1,2 @@
-/server/*.exe
+/server/cmd/
 /client/node_modules/*
