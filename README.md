@@ -16,4 +16,7 @@ This POC is based on [gRPC-Web](https://github.com/grpc/grpc-web)
 * Make sure you have a sane recent node environment
 * Open the client folder on the command line & type `npm install`, followed by `npm start`
 
+*Update: as of 2019/09/19 I added push updates. All the clients receive real time updates.*
+
+
 Don't worry about the envoy folder. It's an example envoy config that could be adapted for a prod environment
